@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {{ super() }}
+
+    <div class="container-fluid" >
+        <h1>Страница не найдена ^o^, вернуться на <a href="{{ url_for('main') }}">главную</a> страницу.</h1>
+    </div>
+{% endblock %}
