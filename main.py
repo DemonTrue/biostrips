@@ -34,45 +34,43 @@ colormap_list = [{'name': 'percentile'},
 def main():
     return render_template('main.html', menu=menu)
 
+
 @app.route('/create-chart', methods=['POST', 'GET'])
 def create_chart():
+    charts_built = 0
     try:
         with open(path_new_chart_json, 'r') as file:
             file_info = json.load(file)
             file_info_empty = 0
-            # graphs = []
+            graphs = []
             if len(file_info) == 0:
                 file_info = {'title': 'NONE', 'colormap': 'NONE'}
                 file_info_empty = 1
                 graphs = []
             else:
                 filename = file_info['title']
-                graphs = display_chart(filename)
+                if 'gencharts' in request.form:
+                    make_chart(file_info)
+                    graphs = display_chart(filename)
+                    charts_built += 1
     except FileNotFoundError:
         flash('No selected file')
 
-    return render_template('create-chart.html', menu=menu, colormap_list=colormap_list, json=file_info, file_empty=file_info_empty, graphs=graphs)
+    return render_template('create-chart.html', menu=menu, colormap_list=colormap_list, json=file_info, file_empty=file_info_empty, graphs=graphs, charts_built=charts_built)
 
-@app.route('/make_chart/<data>')
+
+@app.route('/make_chart')
 def make_chart(data):
-    data = data.replace("'", '"')
-    data_json = json.loads(data)
-    filename = data_json['title']
+    filename = data['title']
     path_data = os.path.join('data', filename)
 
-    gench.generate_charts(path_data, data_json['colormap'])
-    # graphs = display_chart(filename)
+    gench.generate_charts(path_data, data['colormap'])
 
-    return redirect(url_for('create_chart'))
+    return 0
 
 
 @app.route('/display_chart')
 def display_chart(filename):
-    # dir_name = filename.rsplit('.', 1)[0]
-    # path_graphs = os.path.join(path_results, dir_name, 'png')
-    #
-    # colormap_path = os.path.join(path_graphs, 'colormap.png')
-    # graphs = [colormap_path]
     dir_name = filename.rsplit('.', 1)[0]
     path_graphs = os.path.join(path_figures, dir_name)
 
@@ -84,8 +82,6 @@ def display_chart(filename):
             continue
         else:
             graphs.append('figures/' + dir_name + '/' + el)
-
-    # print(graphs)
 
     return graphs
 
@@ -113,6 +109,7 @@ def download(filename):
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
 
 @app.route('/uploader', methods=['GET', 'POST'])
 def uploader():
@@ -145,6 +142,6 @@ def uploader():
 def pageNotFound(error):
     return render_template('page404.html', title="Страница не найдена", menu=menu), 404
 
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+    app.run(host="0.0.0.0", port=8080, debug=True)

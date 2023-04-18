@@ -1,7 +1,5 @@
 import matplotlib.pyplot as plt
-# plt.rcParams.update({'figure.max_open_warning': 0})
 import numpy as np
-import math
 import os
 
 def read_data(path_file):
