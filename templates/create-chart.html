@@ -62,18 +62,17 @@
 
 </div>
 
-
-<div class="container">
-    <div class="alert alert-light">
-        <div class="text-center">
-            {% if graphs|length > 0 %}
+{% if graphs|length > 0 %}
+    <div class="container">
+        <div class="alert alert-light">
+            <div class="text-center">
                 {% for graph in graphs %}
                     <img src="{{ url_for('static', filename=graph) }}" class="img-fluid">
 <!--                    <img src="{{ url_for('static', filename=graph) }}" class="img-fluid img-thumbnail">-->
                 {% endfor %}
-            {% endif %}
+            </div>
         </div>
     </div>
-</div>
+{% endif %}
 
 {% endblock %}
