@@ -39,20 +39,31 @@
     <div class="alert alert-primary">
         <div class="mb-3">
             <p class="fw-bold fs-3">Постройте диаграмму</p>
-            <span class="fw-light fs-6">Filename: {{ json['title'] }}</span>
-            <span class="fw-light fs-6">Colormap: {{ json['colormap'] }}</span>
+            <span class="fw-normal fs-6">Filename: </span>
+            <span class="fw-light fs-6">{{ json['title'] }}</span>
+            <span class="fw-normal fs-6">Colormap: </span>
+            <span class="fw-light fs-6">{{ json['colormap'] }}</span>
+            <span class="fw-normal fs-6">Number of combinations: </span>
+            <span class="fw-light fs-6">{{ session["number_of_combinations"] }}</span>
         </div>
 
         <div class="container">
             <form method = "post">
-                {% if file_empty == 0  %}
-                    <button name='gencharts' class="btn btn-outline-success btn-sm" type="submit">Построить диаграммы</button>
-                    {% if charts_built == 0  %}
-                        <a href="" class="btn disabled btn-sm">Скачать</a>
+                {% if session["fileinfo_empty"] == 0  %}
+                    <button name='gencombs' class="btn btn-outline-success btn-sm" type="submit">Найти все комбинации</button>
+                    {% if session["combs_found"] == 1 %}
+                        <button name='gencharts' class="btn btn-outline-success btn-sm" type="submit">Построить диаграммы</button>
+                        {% if session["charts_built"] == 1  %}
+                            <a href="{{ url_for('download', filename=json['title']) }}" class="btn btn-outline-dark btn-sm">Скачать</a>
+                        {% else %}
+                            <a href="" class="btn disabled btn-sm">Скачать</a>
+                        {% endif %}
                     {% else %}
-                        <a href="{{ url_for('download', filename=json['title']) }}" class="btn btn-outline-dark btn-sm">Скачать</a>
+                        <button name='gencharts' class="btn disabled btn-sm" type="submit">Построить диаграммы</button>
+                        <a href="" class="btn disabled btn-sm">Скачать</a>
                     {% endif %}
                 {% else %}
+                    <button name='gencombs'  class="btn disabled btn-sm" type="submit">Найти все комбинации</button>
                     <button name='gencharts' class="btn disabled btn-sm" type="submit">Построить диаграммы</button>
                     <a href="" class="btn disabled btn-sm">Скачать</a>
                 {% endif %}
