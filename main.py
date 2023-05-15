@@ -11,6 +11,7 @@ import input_validation as inpval
 path_data = 'data'
 path_meta = 'metadata'
 path_results = 'results'
+path_examples = 'examples'
 path_new_chart_json = os.path.join(path_meta, 'new_chart.json')
 path_figures = os.path.join('static', 'figures')
 
@@ -24,6 +25,7 @@ with open(os.path.join(path_meta, 'secret_key.txt'), 'r') as f:
     app.config['SECRET_KEY'] = f.read()
 
 menu = [{"name": "Главная", "url": "/"},
+        {"name": "Мануал", "url": "/manual"},
         {"name": "Построить график", "url": "/create-chart"},
         {"name": "О сайте", "url": "/about"}]
 
@@ -35,6 +37,11 @@ colormap_list = [{'name': 'percentile'},
 @app.route('/home')
 def main():
     return render_template('main.html', menu=menu)
+
+
+@app.route('/manual')
+def manual():
+    return render_template('manual.html', menu=menu)
 
 
 @app.route('/create-chart', methods=['POST', 'GET'])
@@ -156,6 +163,13 @@ def download(filename):
         session["number_of_combinations"] = 0
 
     return send_from_directory(directory, zip_name)
+
+
+@app.route("/download_file/<path:filename>", methods=['GET', 'POST'])
+def download_file(filename):
+    directory = os.path.join(app.root_path, path_examples)
+
+    return send_from_directory(directory, filename, as_attachment=True)
 
 
 def allowed_file(filename):

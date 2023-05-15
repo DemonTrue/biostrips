@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    {{ super() }}
+
+<div class="container-fluid mt-3">
+
+    <div class="mb-3">
+        <p class="fw-normal fs-6">Для построения диаграмм необходимо оформить данные по данному
+            <a href="{{ url_for('download_file', filename='sample.xlsx') }}" class="link-danger">шаблону</a>
+        </p>
+    </div>
+
+    <div class="mb-3">
+        <div class="d-grid gap-2">
+            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_table" aria-expanded="false" aria-controls="collapse_table">
+                Как оформить данные?
+            </button>
+        </div>
+
+        <div class="collapse" id="collapse_table">
+            <div class="card card-body">
+                <p class="lead">Таблица состоит нескольких блоков:</p>
+                <p class="lead">Первой строкой указывается название клетки. Вторая строка содержит названия переменных реагентов.
+                    В третьей строке содержатся названия переменных, от которых зависит продукт.</p>
+                <p class="lead">Затем идет блок-таблица с информацией о реагентах и продуктах, содержащая несколько столбцов,
+                    которые необходимо заполнить пользователю: название вещества, условное обозначение вещества, молярная масса (г/моль),
+                    масса (г), СС50 (мМ).</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="d-grid gap-2">
+            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_notation" aria-expanded="false" aria-controls="collapse_notation">
+                Обозначение веществ
+            </button>
+        </div>
+
+        <div class="collapse" id="collapse_notation">
+            <div class="card card-body">
+                <p class="fw-bold fs-3">Общая информация</p>
+                <p class="lead">У каждого вещества имеется своя роль в реакции, условно отображенная в названии переменной.
+                    Так, например, для постоянного реагента можно использовать нотацию SMi или Ri (или любую другую удобную для Вас).
+                    Если же вы хотите варьировать вещество SMi, то необходимо обозначать вещества данной группы следующим образом:
+                </p>
+                <p class="fw-bold">SMi-1, SMi-2, и т.д.</p>
+                <p class="lead">Данной информации достаточно для случая независимых переменных
+                    (когда Вы хотите обойтись простым декартовым произведением).</p>
+
+
+                <p class="fw-bold fs-3">Обозначение продуктов</p>
+                <p class="lead">Имя переменной: Pi, или BPi, или любое удобное для Вас обозначение.
+                    Обозначение продукта определяется переменными указанными в строке «Product variables».
+                    Так, например, если продукт зависит от переменных: SM1, SM2, SM3, то обозначение продукта
+                    в общем случае будет выглядеть следующим образом:</p>
+                <p class="fw-bold">Pi-k-l-m</p>
+                <p class="fw-normal">где i – порядковый номер продукта; k,l,m – порядковые номера веществ,
+                    от которых зависит продукт (SM1-k, SM2-l, SM3-m).</p>
+                <p class="lead">Если какой-то продукт не зависит от какой-то из переменных, то вместо порядкового номера необходимо указывать "0":</p>
+                <p class="fw-bold">Pi-k-0-m (продукт не зависит от переменной SM2)</p>
+                <p class="lead">В более тяжелом случае, когда один и тот же продукт может образовываться
+                    при разных комбинациях реагентов следует обозначать продукт следующим образом:</p>
+                <p class="fw-bold">Pi-k-l/n-m (одинаковый продукт образуется как в случае SM2-l, так и в случае SM2-n)</p>
+
+
+                <p class="fw-bold fs-3">Случай зависимых переменных</p>
+                <p class="lead">Более сложной является ситуация зависимых переменных. Общий вид нотации для вещества:</p>
+                <p class="fw-bold">SMi-j-k,l,m,…</p>
+                <p class="fw-normal">где i – номер типа реагента, j – порядковый номер реагента данного типа,
+                    а k,l,m – порядковые номера веществ SMi-1, с которым рассматриваемое вещество реагирует.</p>
+                <p class="lead">Это можно представить как последовательное вытаскивание вещей из нескольких ящиков:
+                    если Вы вытаскиваете любой элемент из первого элемента, то Вы не можете взять любой элемент из второго
+                    и последующих ящиков. Это полезная аналогия для многокомпонентных химических реакций.
+                    Проще всего это понять из следующего графа:</p>
+                <img src="{{ url_for('static', filename='images/tree_example.png') }}" class="img-fluid">
+                <p class="font-italic text-center">Дерево комбинаций веществ. В рамках вещество данного типа, справа - нотация</p>
+                <p class="lead">В данном случае, нотация становится сложнее и данные должны образовать структуру по типу
+                    голова-хвост: если у Вас несколько реагентов первого типа: SM1-1, SM1-2, …,
+                    то вторые реагенты необходимо нумеровать следующим образом: SM2-i-1 – в случае, если данный реагент реагирует
+                    только с SM1-1; только со вторым –  SM2-i-2; с двумя –  SM2-i-1,2. Добавление следующей переменной следует
+                    этой же логике: если SM3-i реагирует с веществами SM1-1 и SM2-1-1, то нотация должна быть следующей:
+                    SM3-1-1 (последняя цифра соответствует порядковому номеру SM2);
+                    если указанное вещество реагирует с парами SM1-1/SM2-2-1, SM1-2/SM2-3-2 - SM3-3-2,3;
+                    если вещество реагирует во всех возможных комбинациях - SM3-4. </p>
+                <p class="lead">Таким образом, каждая комбинация порождается последовательностью вершин графа
+                    от родительского элемента до крайнего дочернего.</p>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="d-grid gap-2">
+            <button class="btn btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_example" aria-expanded="false" aria-controls="collapse_example">
+                Примеры
+            </button>
+        </div>
+
+        <div class="collapse" id="collapse_example">
+            <div class="card card-body">
+                <p class="fw-normal fs-6">Пример построения одной
+                    <a href="{{ url_for('download_file', filename='fast_1.txt') }}" class="link-danger">диаграммы</a>
+                </p>
+
+                <p class="fw-normal fs-6">Пример построения нескольких
+                    <a href="{{ url_for('download_file', filename='fast_2.txt') }}" class="link-danger">диаграмм</a>
+                </p>
+
+                <p class="fw-normal fs-6">Пример 1 построения диаграммы для реакции
+                    <a href="{{ url_for('download_file', filename='suzuki_1.txt') }}" class="link-danger">Сузуки</a>
+                </p>
+
+                <p class="fw-normal fs-6">Пример 2 построения диаграммы для реакции
+                    <a href="{{ url_for('download_file', filename='suzuki_2.txt') }}" class="link-danger">Сузуки</a>
+                </p>
+
+                <p class="fw-normal fs-6">Пример построения сложной
+                    <a href="{{ url_for('download_file', filename='abstract.txt') }}" class="link-danger">диаграммы</a>
+                </p>
+
+
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
