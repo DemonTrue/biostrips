@@ -3,7 +3,6 @@ from flask import Flask, render_template, request, flash, redirect, url_for, sen
 from werkzeug.utils import secure_filename
 from zipfile import ZipFile
 import os
-import json
 import generate_chart as gench
 import generate_combinations_table as gentab
 import input_validation as inpval
@@ -15,28 +14,40 @@ path_examples = 'examples'
 path_new_chart_json = os.path.join(path_meta, 'new_chart.json')
 path_figures = os.path.join('static', 'figures')
 
-ALLOWED_EXTENSIONS = {'txt'}
+ALLOWED_EXTENSIONS = ['txt', 'csv']
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = path_data
 
-
 with open(os.path.join(path_meta, 'secret_key.txt'), 'r') as f:
     app.config['SECRET_KEY'] = f.read()
 
-menu = [{"name": "Главная", "url": "/"},
-        {"name": "Мануал", "url": "/manual"},
-        {"name": "Построить график", "url": "/create-chart"},
-        {"name": "О сайте", "url": "/about"}]
+menu = [{"name": "Main", "url": "/"},
+        {"name": "Built Chart", "url": "/create-chart"},
+        {"name": "Manual", "url": "/manual"},
+        {"name": "About", "url": "/about"}]
 
 colormap_list = [{'name': 'percentile'},
                  {'name': 'linear'}]
+
+cyt_potentials_list = [{'name': 'BF'},
+                       {'name': 'CPi'},
+                       {'name': 'CPf'},
+                       {'name': 'CPf_rel'}]
 
 
 @app.route('/')
 @app.route('/home')
 def main():
-    return render_template('main.html', menu=menu)
+    path_references = os.path.join(path_meta, 'references.txt')
+    try:
+        with open(path_references, 'r') as file:
+            references = [line.replace('\n', '') for line in file.readlines()]
+
+    except:
+        references = ''
+
+    return render_template('main.html', menu=menu, references=references)
 
 
 @app.route('/manual')
@@ -46,51 +57,46 @@ def manual():
 
 @app.route('/create-chart', methods=['POST', 'GET'])
 def create_chart():
-    try:
-        with open(path_new_chart_json, 'r') as file:
-            file_info = json.load(file)
-            graphs = []
-            if len(file_info) == 0:
-                file_info = {'title': 'NONE', 'colormap': 'NONE'}
-                session["fileinfo_empty"] = 1
-                session["number_of_combinations"] = 0
+    if "data_upload" in session:
+        if 'send' in request.form:
+            session["data_upload"] = 1
+    else:
+        session["data_upload"] = 0
+        session["graphs"] = []
+
+    if session["data_upload"] == 1:
+        file_info = {'title': session["filename"], 'colormap': session["colormap"], 'cyt_potential': session["cyt_potential"]}
+        filename = file_info['title']
+
+        if 'gencombs' in request.form:
+            message = data_validation(file_info)
+
+            if message == 'SUCCESS':
+                filename = session["filename"]
+                path_table, number_of_combinations = calc_combinations(file_info)
+                session["path_table"] = path_table
+                session["number_of_combinations"] = number_of_combinations
+                session["combs_found"] = 1
             else:
-                filename = file_info['title']
-                session["fileinfo_empty"] = 0
+                flash(message)
 
-                if 'gencombs' in request.form:
-                    message = data_validation(file_info)
-                    
-                    if message == 'SUCCESS':
-                        path_table, number_of_combinations = calc_combinations(file_info)
-                        session["path_table"] = path_table
-                        session["number_of_combinations"] = number_of_combinations
-                        session["combs_found"] = 1
-                    else:
-                        flash(message)
-                else:
-                    session["combs_found"] = 0
+        if 'gencharts' in request.form:
+            path_table = session["path_table"]
 
-                if 'gencharts' in request.form:
-                    path_table = session["path_table"]
+            top_combinations = make_chart(file_info, path_table)
+            graphs = display_chart(filename)
 
-                    make_chart(file_info, path_table)
-                    graphs = display_chart(filename)
+            session["graphs"] = graphs
+            session["charts_built"] = 1
+            session["combs_found"] = 1
+            session["top_combinations"] = top_combinations
 
-                    session["charts_built"] = 1
-                    session["combs_found"] = 1
-                else:
-                    session["charts_built"] = 0
+    else:
+        file_info = {'title': 'NONE', 'colormap': 'NONE', 'cyt_potential': 'NONE'}
+        reset_session()
 
-    except FileNotFoundError:
-        session["fileinfo_empty"] = 1
-        session["combs_found"] = 0
-        session["charts_built"] = 0
-        session["path_table"] = ''
-        session["number_of_combinations"] = 0
-        flash('No selected file')
-
-    return render_template('create-chart.html', menu=menu, colormap_list=colormap_list, json=file_info, graphs=graphs, session=session)
+    return render_template('create-chart.html', menu=menu, colormap_list=colormap_list,
+                           cyt_potentials_list=cyt_potentials_list, json=file_info, session=session)
 
 
 @app.route('/data_validation')
@@ -116,11 +122,13 @@ def calc_combinations(metadata):
 @app.route('/make_chart')
 def make_chart(metadata, path_table):
     filename = metadata['title']
+    colormap = metadata['colormap']
+    cyt_potential = metadata['cyt_potential']
     path_data = os.path.join('data', filename)
 
-    gench.generate_charts(path_data, path_table, metadata['colormap'])
+    top_combinations = gench.generate_charts(path_data, path_table, colormap, cyt_potential)
 
-    return 0
+    return top_combinations
 
 
 @app.route('/display_chart')
@@ -154,15 +162,23 @@ def download(filename):
 
     directory = os.path.join(app.root_path, path_results)
 
-    with open(path_new_chart_json, 'w') as file:
-        json.dump('', file, ensure_ascii=False, default=str)
-        session["fileinfo_empty"] = 1
-        session["combs_found"] = 0
-        session["charts_built"] = 0
-        session["path_table"] = ''
-        session["number_of_combinations"] = 0
+    reset_session()
 
     return send_from_directory(directory, zip_name)
+
+
+@app.route("/reset_session")
+def reset_session():
+    session["data_upload"] = 0
+    session["graphs"] = []
+    session["filename"] = ''
+    session["colormap"] = ''
+    session["cyt_potential"] = ''
+    session["combs_found"] = 0
+    session["path_table"] = ''
+    session["charts_built"] = 0
+    session["top_combinations"] = ''
+    session["number_of_combinations"] = 0
 
 
 @app.route("/download_file/<path:filename>", methods=['GET', 'POST'])
@@ -195,10 +211,22 @@ def uploader():
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
 
             colormap_name = request.form.get('colormap').replace('"', '')
-            file_info = {'title':filename, 'colormap':colormap_name}
+            cyt_potential_name = request.form.get('cyt_potential').replace('"', '')
 
-            with open(path_new_chart_json, 'w') as file:
-                json.dump(file_info, file, ensure_ascii=False, default=str)
+            session["filename"] = filename
+            session["colormap"] = colormap_name
+            session["cyt_potential"] = cyt_potential_name
+            session["data_upload"] = 1
+        else:
+            extensions = 'Invalid file extension! The file must have one of the following extensions: '
+            len_extensions = len(ALLOWED_EXTENSIONS)
+            for count, extension in enumerate(ALLOWED_EXTENSIONS):
+                if count == len_extensions - 1:
+                    extensions += extension
+                else:
+                    extensions += extension + ','
+
+            flash(extensions)
 
             return redirect(url_for('create_chart'))
     return redirect(url_for('create_chart'))
@@ -207,6 +235,7 @@ def uploader():
 @app.errorhandler(404)
 def pageNotFound(error):
     return render_template('page404.html', title="Страница не найдена", menu=menu), 404
+
 
 if __name__ == '__main__':
     # app.run(debug=True)

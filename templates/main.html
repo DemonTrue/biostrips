@@ -6,39 +6,46 @@
 <div class="container-fluid mt-3">
 
     <div class="d-grid gap-2">
-        <button class="alert alert-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_info" aria-expanded="false" aria-controls="collapse_info">
-            Зачем это нужно?
+        <button class="alert alert-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_info" aria-expanded="false" aria-controls="collapse_info">
+                Bio-Profiles and bio-Strips of Chemical Reactions
         </button>
     </div>
 
-    <div class="collapse" id="collapse_info">
+    <p class='text-justify lh-sm'>Bio-Profiles and bio-Strips allow carrying out fast preliminary assessment
+        of the input of participant substances into the “overall toxicity” of a given reaction by using
+        half-maximal cytotoxicity concentrations (CC50) as toxicity metrics. Here, you can build bio-Strips
+        for your own chemical processes using your own data on biological activity.
+        Click
+        <a href="{{ url_for('create_chart') }}" class="link-danger">HERE</a>
+        to continue.</p>
+
+    <div class="container mt-3">
+        <img src="{{ url_for('static', filename='images/beatiful_pic_2.jpg') }}" class="img-fluid img-thumbnail">
+    </div>
+    <p class="fw-light fs-6 text-center">A bio-Strip for synthesis of 1,1’-biphenyl from phenylboronic acid and iodobenzene
+        (shown as an example). The sector length corresponds to the normalized cytotoxicity of a particular
+        substance, that is, to the ratio of its amount (mmol) in the reaction to its CC50 (mmol per liter)
+        in a given cell line. The longer the sector, the higher the input of the substance into the
+        “overall cytotoxicity” of the reaction.</p>
+
+
+    <div class="d-grid gap-2">
+        <button class="alert alert-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_example" aria-expanded="false" aria-controls="collapse_example">
+            An example of automatically generated diagrams for the Suzuki reaction:
+        </button>
+    </div>
+
+    <div class="collapse" id="collapse_example">
         <div class="card card-body">
-            <p class='text-justify lh-sm'>В течение многих лет комплексная и надежная оценка токсического потенциала того
-                или иного химического процесса была недостижимой задачей из-за чрезвычайной сложности многочисленных процессов,
-                происходящих при взаимодействии химических веществ с живыми организмами и их ближайшим окружением.
-                На сегодняшний день разработаны подробные классификации потенциальных опасностей химических веществ
-                и проектирования более безопасных химических процессов, однако до сих пор не был найден быстрый и наглядный способ оценки
-                токсического риска для широкого спектра химических веществ и процессов.
-            </p>
-            <p class='text-justify lh-sm'>
-                Недавно в нашей научной школе была предложена новая методика быстрой предварительной оценки потенциальной
-                опасности химических процессов для здоровья с помощью био-стрипов. В частности, био-стрипы подразумевают
-                использование CC50 (полумаксимальных концентраций цитотоксичности) и нормализованной цитотоксичности веществ,
-                которые участвуют в конкретной химической реакции для оценки его «общей цитотоксичности».
-                Эта методология была успешно применена для анализа широко распространенных химических реакций, в том числе реакции Сузуки.
-            </p>
+            <img src="{{ url_for('static', filename='images/example_result.png') }}" class="img-fluid">
         </div>
     </div>
 
-    <p class="font-italic">Пример автоматически сгенерированных диаграмм для реакции Сузуки:</p>
-    <div class="container mt-3">
-        <img src="{{ url_for('static', filename='images/example_result.png') }}" class="img-fluid">
-    </div>
-
     <div class="mb-3">
-        <span class="fw-normal fs-6">Публикации:</span>
-        <p class="fw-light fs-6">1. Egorova, K. S., Posvyatenko, A. v., Galushko, A. S., & Ananikov, V. P. (2023).
-            Fast evaluation of the safety of chemical reactions using cytotoxicity potentials and bio-Strips. Chemosphere, 313.</p>
+        <span class="fw-normal fs-6">References:</span>
+        {% for ref in references %}
+            <p class="fw-light fs-6">{{ ref }}</p>
+        {% endfor %}
     </div>
 
 </div>

@@ -1,0 +1,5 @@
+1. Egorova KS, Galushko AS, Ananikov VP. Introducing tox-Profiles of Chemical Reactions. Angew. Chem. Int. Ed. 2020, 59(50): 22296-22305. doi: 10.1002/anie.202003082
+2. Egorova KS, Galushko AS, Dzhemileva LU, D'yakonov VA, Ananikov VP. Building bio-Profiles for common catalytic reactions. Green Chem. 2021, 23, 6373-6391. doi: 10.1039/d1gc00207d
+3. Pentsak EO, Dzhemileva LU, D'yakonov VA, Shaydullin RR, Galushko AS, Egorova KS, Ananikov VP. Comparative assessment of heterogeneous and homogeneous Suzuki-Miyaura catalytic reactions using bio-Profiles and bio-Factors. J. Organomet. Chem. 2022, 965-966, 122319. doi: 10.1016/j.jorganchem.2022.122319
+4. Egorova KS, Galushko AS, Dzhemileva LU, D'yakonov VA, Ananikov VP. Application of bio-Profiles of chemical reactions for analysis of solvent impact on overall toxicity of C-C-cross-coupling process. Doklady Chemistry 2022, 504, 106-117. doi: 10.1134/S0012500822600080
+5. Egorova KS, Posvyatenko AV, Galushko AS, Ananikov VP. Fast evaluation of the safety of chemical reactions using cytotoxicity potentials and bio-Strips. Chemosphere 2023, 313, 137378. doi: 10.1016/j.chemosphere.2022.137378

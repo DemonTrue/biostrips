@@ -3,7 +3,15 @@ from itertools import product
 
 def parsing_and_preparation_data(path_file):
     with open(path_file, "r", encoding="utf-8") as f:
-        lines = [line.replace('\n', '').split('\t') for line in f.readlines()]
+        extention = path_file.split('.', 1)[1].lower()
+
+        if extention == 'csv':
+            lines = [line.replace('\n', '').split(';') for line in f.readlines()]
+        elif extention == 'txt':
+            lines = [line.replace('\n', '').split('\t') for line in f.readlines()]
+        else:
+            error_message = 'Error! The file extension "' + extention + '" is not allowed!'
+            return error_message
 
         molecules = []
         generic_names = []

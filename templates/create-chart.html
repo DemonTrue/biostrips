@@ -14,7 +14,7 @@
 <div class="container mt-3">
     <div class="alert alert-primary">
         <form method = "post" class="was-validated" action="{{ url_for('uploader') }}" enctype = "multipart/form-data">
-            <p class="fw-bold fs-3">Загрузите файл и выберите цветовую карту</p>
+            <p class="fw-bold fs-3">Upload file and select options</p>
 
             <div class="mb-3">
                 <input type="file" name = "file" class="form-control" aria-label="file example" required>
@@ -22,7 +22,7 @@
 
             <div class="mb-3">
                 <select name="colormap" id="colormap" class="form-select" required aria-label="select example">
-                    <option value="">Выберите цветовую карту</option>
+                    <option value="">Select a colormap</option>
                     {% for colormap in colormap_list %}
                         <li><option name="colormap" id="colormap"</option>"{{ colormap.name }}"</option></li>
                     {% endfor %}
@@ -30,7 +30,16 @@
             </div>
 
             <div class="mb-3">
-                <button class="btn btn-primary" type="submit">Отправить</button>
+                <select name="cyt_potential" id="cyt_potential" class="form-select" required aria-label="select example">
+                    <option value="">Select cytotoxic potential</option>
+                    {% for cyt_potential in cyt_potentials_list %}
+                        <li><option name="cyt_potential" id="cyt_potential"</option>"{{ cyt_potential.name }}"</option></li>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <button name='send' class="btn btn-primary" type="submit">Send</button>
             </div>
         </form>
     </div>
@@ -38,34 +47,36 @@
 
     <div class="alert alert-primary">
         <div class="mb-3">
-            <p class="fw-bold fs-3">Постройте диаграмму</p>
+            <p class="fw-bold fs-3">Build charts</p>
             <span class="fw-normal fs-6">Filename: </span>
             <span class="fw-light fs-6">{{ json['title'] }}</span>
             <span class="fw-normal fs-6">Colormap: </span>
             <span class="fw-light fs-6">{{ json['colormap'] }}</span>
+            <span class="fw-normal fs-6">Metric: </span>
+            <span class="fw-light fs-6">{{ json['cyt_potential'] }}</span>
             <span class="fw-normal fs-6">Number of combinations: </span>
             <span class="fw-light fs-6">{{ session["number_of_combinations"] }}</span>
         </div>
 
         <div class="container">
             <form method = "post">
-                {% if session["fileinfo_empty"] == 0  %}
-                    <button name='gencombs' class="btn btn-outline-success btn-sm" type="submit">Найти все комбинации</button>
+                {% if session["data_upload"] == 1  %}
+                    <button name='gencombs' class="btn btn-outline-success btn-sm" type="submit">Find all combinations</button>
                     {% if session["combs_found"] == 1 %}
-                        <button name='gencharts' class="btn btn-outline-success btn-sm" type="submit">Построить диаграммы</button>
+                        <button name='gencharts' class="btn btn-outline-success btn-sm" type="submit">Build charts</button>
                         {% if session["charts_built"] == 1  %}
-                            <a href="{{ url_for('download', filename=json['title']) }}" class="btn btn-outline-dark btn-sm">Скачать</a>
+                            <a href="{{ url_for('download', filename=json['title']) }}" class="btn btn-outline-dark btn-sm">Download</a>
                         {% else %}
-                            <a href="" class="btn disabled btn-sm">Скачать</a>
+                            <a href="" class="btn disabled btn-sm">Download</a>
                         {% endif %}
                     {% else %}
-                        <button name='gencharts' class="btn disabled btn-sm" type="submit">Построить диаграммы</button>
-                        <a href="" class="btn disabled btn-sm">Скачать</a>
+                        <button name='gencharts' class="btn disabled btn-sm" type="submit">Build charts</button>
+                        <a href="" class="btn disabled btn-sm">Download</a>
                     {% endif %}
                 {% else %}
-                    <button name='gencombs'  class="btn disabled btn-sm" type="submit">Найти все комбинации</button>
-                    <button name='gencharts' class="btn disabled btn-sm" type="submit">Построить диаграммы</button>
-                    <a href="" class="btn disabled btn-sm">Скачать</a>
+                    <button name='gencombs'  class="btn disabled btn-sm" type="submit">Find all combinations</button>
+                    <button name='gencharts' class="btn disabled btn-sm" type="submit">Build charts</button>
+                    <a href="" class="btn disabled btn-sm">Download</a>
                 {% endif %}
             </form>
         </div>
@@ -73,13 +84,22 @@
 
 </div>
 
-{% if graphs|length > 0 %}
+{% if session["graphs"]|length > 0 %}
     <div class="container">
         <div class="alert alert-light">
+            <p class='fw-bold text-center'>Top combinations: </p>
+            {% for el in session["top_combinations"] %}
+                <p class='text-justify lh-sm text-center'>
+                <span class="fw-normal fs-6">combination: </span>
+                <span class="fw-light fs-6">{{ el[0] }}</span>
+                <span class="fw-normal fs-6">{{ json['cyt_potential'] }}: </span>
+                <span class="fw-light fs-6">{{ el[1] }}</span>
+                </p>
+            {% endfor %}
+
             <div class="text-center">
-                {% for graph in graphs %}
+                {% for graph in session["graphs"] %}
                     <img src="{{ url_for('static', filename=graph) }}" class="img-fluid">
-<!--                    <img src="{{ url_for('static', filename=graph) }}" class="img-fluid img-thumbnail">-->
                 {% endfor %}
             </div>
         </div>
