@@ -7,6 +7,13 @@ import generate_chart as gench
 import generate_combinations_table as gentab
 import input_validation as inpval
 
+from flask_wtf import FlaskForm
+from wtforms import StringField, FormField, FieldList, SelectField, Form, DecimalField
+from wtforms.validators import DataRequired, Optional, NumberRange
+
+from flask_bootstrap import Bootstrap
+
+
 path_data = 'data'
 path_meta = 'metadata'
 path_results = 'results'
@@ -18,6 +25,8 @@ ALLOWED_EXTENSIONS = ['txt', 'csv']
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = path_data
+
+bootstrap = Bootstrap(app)
 
 with open(os.path.join(path_meta, 'secret_key.txt'), 'r') as f:
     app.config['SECRET_KEY'] = f.read()
@@ -34,6 +43,42 @@ cyt_potentials_list = [{'name': 'BF'},
                        {'name': 'CPi'},
                        {'name': 'CPf'},
                        {'name': 'CPf_rel'}]
+
+
+class ReagentLineForm(Form):
+    reagent_name = StringField("Reagent name: ", validators=[DataRequired()], description="Reagent name")
+    reagent_role = StringField("Reagent role: ", validators=[DataRequired()], description="Reagent role")
+    molar_mass = DecimalField("Molar mass: ",
+                              validators=[DataRequired(), NumberRange(0)],
+                              description="Molar mass")
+    mass = DecimalField("Mass: ",
+                       validators=[DataRequired(), NumberRange(0)],
+                       description="Mass")
+    cc50 = DecimalField("CC50: ",
+                       validators=[DataRequired(), NumberRange(0)],
+                       description="CC50")
+
+    # def validate(self):
+    #     if not Form.validate(self):
+    #         return False
+    #     result = True
+    #     seen = set()
+    #     for field in self.reagent_role:
+    #         if field.data in seen:
+    #             field.errors.append('This notation has already been specified!')
+    #             result = False
+    #         else:
+    #             seen.add(field.data)
+    #     return result
+
+
+class OneChartForm(FlaskForm):
+    filename = StringField("Enter filename: ", validators=[DataRequired()], description="Filename")
+    cell_name = StringField("Enter cell name: ", validators=[DataRequired()], description="Cell name")
+    reagents_info = FieldList(FormField(ReagentLineForm), min_entries=1)
+    products_info = FieldList(FormField(ReagentLineForm), min_entries=1)
+    colormap = SelectField("Choose colormap: ")
+    cyt_potential = SelectField("Choose cytotoxic potential: ")
 
 
 @app.route('/')
@@ -57,8 +102,27 @@ def manual():
 
 @app.route('/create-chart', methods=['POST', 'GET'])
 def create_chart():
-    if "data_upload" in session:
-        if 'send' in request.form:
+    form = OneChartForm()
+    form.colormap.choices = [(el["name"], el["name"]) for el in colormap_list]
+    form.cyt_potential.choices = [(el["name"], el["name"]) for el in cyt_potentials_list]
+
+    if 'send_create' in request.form:
+        filename = form.filename.data
+        cell_name = form.cell_name.data
+        colormap = form.colormap.data
+        cyt_potential = form.cyt_potential.data
+        reagents_info = form.reagents_info.data
+        products_info = form.products_info.data
+
+        save_chart_data(filename, cell_name, reagents_info, products_info)
+
+        session["filename"] = filename + '.txt'
+        session["colormap"] = colormap
+        session["cyt_potential"] = cyt_potential
+        session["data_upload"] = 1
+
+    elif "data_upload" in session:
+        if 'send_upload' in request.form:
             session["data_upload"] = 1
     else:
         session["data_upload"] = 0
@@ -96,7 +160,37 @@ def create_chart():
         reset_session()
 
     return render_template('create-chart.html', menu=menu, colormap_list=colormap_list,
-                           cyt_potentials_list=cyt_potentials_list, json=file_info, session=session)
+                           cyt_potentials_list=cyt_potentials_list, json=file_info, session=session, form=form)
+
+
+@app.route('/save_chart_data')
+def save_chart_data(filename, cell_name, reagents_info, products_info):
+    path_file = os.path.join(path_data, filename + '.txt')
+
+    with open(path_file, "w", encoding='utf-8') as out_file:
+        print("Cell", cell_name, sep='\t', end='\n', file=out_file)
+        print("Variables", end='\n', file=out_file)
+        print("Product variables", end='\n', file=out_file)
+        print("Samples", "Abbreviation", "Mr, g*mol-1", "Mass, g", "CC50, mM", sep='\t', end='\n', file=out_file)
+        print("Starting materials", end='\n', file=out_file)
+
+        for el in reagents_info:
+            print(el["reagent_name"], end='\t', file=out_file)
+            print(el["reagent_role"], end = '\t', file = out_file)
+            print(el["molar_mass"], end='\t', file=out_file)
+            print(el["mass"], end='\t', file=out_file)
+            print(el["cc50"], end='\n', file=out_file)
+
+        print("Products", end='\n', file=out_file)
+
+        for el in products_info:
+            print(el["reagent_name"], end='\t', file=out_file)
+            print(el["reagent_role"], end='\t', file=out_file)
+            print(el["molar_mass"], end='\t', file=out_file)
+            print(el["mass"], end='\t', file=out_file)
+            print(el["cc50"], end='\n', file=out_file)
+
+    return 0
 
 
 @app.route('/data_validation')

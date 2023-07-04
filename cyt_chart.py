@@ -7,7 +7,16 @@ import os
 
 def read_data(path_file):
     with open(path_file, "r", encoding="utf-8") as f:
-        lines = [line.replace('\n', '').split('\t') for line in f.readlines()]
+        extention = path_file.split('.', 1)[1].lower()
+
+        if extention == 'csv':
+            lines = [line.replace('\n', '').split(';') for line in f.readlines()]
+        elif extention == 'txt':
+            lines = [line.replace('\n', '').split('\t') for line in f.readlines()]
+        else:
+            error_message = 'Error! The file extension "' + extention + '" is not allowed!'
+            return error_message
+
         len_lines = len(lines)
 
         reactions = []
@@ -158,23 +167,32 @@ def cyt_chart(path_graph, reaction_name, molecules, generic_names, normal_cytoto
     return fig, ax
 
 
-def calc_biofactor(generic_names, normal_cytotoxicity):
+def calc_cyt_metrics(generic_names, normal_cytotoxicity):
     cyt_sum_reagents = 0
     cyt_sum_products = 0
+    cyt_sum_target_products = 0
     cyt_sum_const = 0
 
     for names, cyt in zip(generic_names, normal_cytotoxicity):
 
-        if 'SM' == names[:2] or 'R' == names[:1]:
+        if names[:2] == 'SM' or names[:1] == 'R':
             cyt_sum_reagents += cyt
-        elif 'P' == names[:1] or 'BP' == names[:2]:
+        elif names[:1] == 'P' or names[:2] == 'BP':
             cyt_sum_products += cyt
+
+            if names[:1] == 'P':
+                cyt_sum_target_products += cyt
         else:
             cyt_sum_const += cyt
 
+    CPi = cyt_sum_reagents + cyt_sum_const
+    CPf = cyt_sum_products + cyt_sum_const
+    CPf_rel = CPf - cyt_sum_target_products
     biofactor = (cyt_sum_products + cyt_sum_const) / (cyt_sum_reagents + cyt_sum_const)
 
-    return round(biofactor, 2)
+    cyt_metrics = [round(biofactor, 2), round(CPi, 2), round(CPf, 2), round(CPf_rel, 2)]
+
+    return cyt_metrics
 
 
 def get_all_cytotoxity(reactions):
@@ -280,3 +298,27 @@ def choice_colormap(colormap, reactions):
         cytotoxity_scale = np.linspace(cytotoxity_scale_start, cytotoxity_scale_end, number_of_colors)
 
     return colors, cytotoxity_scale
+
+
+def find_top_combinations(cyt_metrics, metric, top_size):
+    if metric == 'BF':
+        index_metric = 0
+    elif metric == 'CPi':
+        index_metric = 1
+    elif metric == 'CPf':
+        index_metric = 2
+    elif metric == 'CPf_rel':
+        index_metric = 3
+
+    names, metric_vector = zip(*[(metrics[0], metrics[1][index_metric]) for metrics in cyt_metrics.items()])
+
+    indices_metrics = [i for i in range(len(metric_vector))]
+
+    sort_indices_metrics = [index for metric_num, index in sorted(zip(metric_vector, indices_metrics))]
+
+    top_combinations = []
+    for i in range(top_size):
+        index_sort = sort_indices_metrics[i]
+        top_combinations.append([names[index_sort], metric_vector[index_sort]])
+
+    return top_combinations

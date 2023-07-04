@@ -6,14 +6,14 @@ roles_of_molecules = ['starting materials', 'catalysts', 'reagents', 'solvents',
 def data_validation(path_file):
     try:
         with open(path_file, "r", encoding="utf-8") as f:
-            extention = path_file.split('.', 1)[1].lower()
+            extension = path_file.split('.', 1)[1].lower()
 
-            if extention == 'csv':
+            if extension == 'csv':
                 lines = [line.replace('\n', '').split(';') for line in f.readlines()]
-            elif extention == 'txt':
+            elif extension == 'txt':
                 lines = [line.replace('\n', '').split('\t') for line in f.readlines()]
             else:
-                error_message = 'Error! The file extension "' + extention + '" is not allowed!'
+                error_message = 'Error! The file extension "' + extension + '" is not allowed!'
                 return error_message
 
             error_message = 'Error! '
@@ -29,17 +29,26 @@ def data_validation(path_file):
                         error_message += 'Add the string "cell" to the line 1!'
                         return error_message
                 elif count_line == 1:
-                    variables_names = lines[1][1].replace(' ', '').split(',')
+                    if len(line) > 1:
+                        variables_names = lines[1][1].replace(' ', '').split(',')
+                    else:
+                        variables_names = ''
+
                     if line[0].lower() != 'variables':
                         error_message += 'Add the string "variables" to the line 2!'
                         return error_message
                 elif count_line == 2:
-                    product_variables_names = lines[2][1].replace(' ', '').split(',')
-                    number_product_variables = len(product_variables_names)
+                    if len(line) > 1:
+                        product_variables_names = lines[2][1].replace(' ', '').split(',')
+                        number_product_variables = len(product_variables_names)
+                    else:
+                        product_variables_names = ''
+                        number_product_variables = 0
+
                     if line[0].lower() != 'product variables':
                         error_message += 'Add the string "product variables" to the line 3!'
                         return error_message
-                elif count_line == 3:  # ?????
+                elif count_line == 3:  # table description
                     continue
                 elif line[0].lower() in roles_of_molecules:
                     if line[0].lower() == 'products':

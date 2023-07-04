@@ -1,16 +1,18 @@
 from itertools import product
 
+roles_of_molecules = ['starting materials', 'catalysts', 'reagents', 'solvents', 'products', 'byproducts']
+
 
 def parsing_and_preparation_data(path_file):
     with open(path_file, "r", encoding="utf-8") as f:
-        extention = path_file.split('.', 1)[1].lower()
+        extension = path_file.split('.', 1)[1].lower()
 
-        if extention == 'csv':
+        if extension == 'csv':
             lines = [line.replace('\n', '').split(';') for line in f.readlines()]
-        elif extention == 'txt':
+        elif extension == 'txt':
             lines = [line.replace('\n', '').split('\t') for line in f.readlines()]
         else:
-            error_message = 'Error! The file extension "' + extention + '" is not allowed!'
+            error_message = 'Error! The file extension "' + extension + '" is not allowed!'
             return error_message
 
         molecules = []
@@ -25,22 +27,28 @@ def parsing_and_preparation_data(path_file):
         cell = lines[0][1]
 
         # parsing variables
-        if len(lines[1][1]) == 0:
+        if len(lines[1]) == 1:
+            variables_names = []
+        elif len(lines[1][1]) == 0:
             variables_names = []
         else:
             variables_names = lines[1][1].replace(' ', '').split(',')
 
-        if len(lines[2][1]) == 0:
+        if len(lines[2]) == 1:
+            product_variables_names = []
+        elif len(lines[2][1]) == 0:
             product_variables_names = []
         else:
             product_variables_names = lines[2][1].replace(' ', '').split(',')
 
         # parsing data
         for count_line, line in enumerate(lines):
+            name_string = line[0].lower()
+
             if count_line == 0 or count_line == 1 or count_line == 2 or count_line == 3 or count_line == 4:
                 continue
-            elif len(line[1]) == 0:
-                if line[0].lower() == 'products':
+            elif name_string in roles_of_molecules:
+                if name_string == 'products':
                     product_flag = 1
                 continue
             else:
