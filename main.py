@@ -6,13 +6,12 @@ import os
 import generate_chart as gench
 import generate_combinations_table as gentab
 import input_validation as inpval
-
 from flask_wtf import FlaskForm
 from wtforms import StringField, FormField, FieldList, SelectField, Form, DecimalField
 from wtforms.validators import DataRequired, Optional, NumberRange
-
 from flask_bootstrap import Bootstrap
-
+import logging
+from logging.handlers import RotatingFileHandler
 
 path_data = 'data'
 path_meta = 'metadata'
@@ -20,6 +19,7 @@ path_results = 'results'
 path_examples = 'examples'
 path_new_chart_json = os.path.join(path_meta, 'new_chart.json')
 path_figures = os.path.join('static', 'figures')
+
 
 ALLOWED_EXTENSIONS = ['txt', 'csv']
 
@@ -332,6 +332,19 @@ def pageNotFound(error):
     return render_template('page404.html', title="Страница не найдена", menu=menu), 404
 
 
+@app.errorhandler(500)
+def internal_error(exception):
+    app.logger.error(exception)
+    return render_template('500.html'), 500
+
+
 if __name__ == '__main__':
-    # app.run(debug=True)
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    log_file = 'flask.log'
+
+    file_handler = RotatingFileHandler(log_file, maxBytes=1024 * 1024 * 100, backupCount=20)
+    file_handler.setLevel(logging.ERROR)
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    file_handler.setFormatter(formatter)
+    app.logger.addHandler(file_handler)
+
+    app.run(host="0.0.0.0", port=8080)
