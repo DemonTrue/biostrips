@@ -1,0 +1,17 @@
+Cell;CaCo-2;;;
+Variables;;;;
+Product variables;;;;
+Samples;Abbreviation;Mr, g*mol-1;Mass, g ;CC50, mM
+Starting materials;;;;
+A1;SM1;121,93;0,122;14,1575
+B1;SM2;234,04;0,234;23,46383333
+Catalysts;;;;
+E1;CT;224,5;0,002;1,035075
+Reagents;;;;
+F1;R;105,988;0,105988;45,42333333
+Solvents;;;;
+G1;S;46,07;1,263;598,875
+Products;;;;
+P0;P;184,24;0,184;4
+Byproducts;;;;
+P1;BP1;102,89;0,103;185,88
