@@ -91,10 +91,14 @@ def data_validation(path_file):
                     numerical_data = {'Mr': line[2], 'Mass': line[3], 'CC50': line[4]}
 
                     for data in numerical_data.items():
-                        number = data[1].replace(',', '.')
+                        number_line = data[1].replace(',', '.')
 
                         try:
-                            float(number)
+                            number = float(number_line)
+                            if number <= 0:
+                                message = 'Element ' + str(data[0]) + ' in line ' + str(count_line + 1) + ' must be a positive number!'
+                                error_message += message
+                                return error_message
                         except:
                             message = 'Element ' + str(data[0]) + ' in line ' + str(count_line + 1) + ' is not a number!'
                             error_message += message

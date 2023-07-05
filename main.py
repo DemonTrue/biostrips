@@ -55,8 +55,9 @@ class ReagentLineForm(Form):
                        validators=[DataRequired(), NumberRange(0)],
                        description="Mass")
     cc50 = DecimalField("CC50: ",
-                       validators=[DataRequired(), NumberRange(0)],
+                       validators=[DataRequired(), NumberRange(0.00001)],
                        description="CC50")
+    # 0,0000...1???
 
     # def validate(self):
     #     if not Form.validate(self):
@@ -332,5 +333,5 @@ def pageNotFound(error):
 
 
 if __name__ == '__main__':
-    # app.run(debug=True)
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(debug=True)
+    # app.run(host="0.0.0.0", port=8080, debug=True)

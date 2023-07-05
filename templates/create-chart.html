@@ -11,8 +11,98 @@
     {% endif %}
 {% endfor %}
 
+
 <div class="container mt-3">
-    <div class="alert alert-primary">
+
+    <div class="my-4">
+        <button class="btn btn-primary" id="toggle-btn-form">create file</button>
+    </div>
+
+    <div class="alert alert-primary" id='create-file-form' style="display:none;">
+        <p class="fw-bold fs-3">Enter data for plotting</p>
+
+        <form method="POST">
+            {{ form.hidden_tag() }}
+
+            <div class="mb-3">
+                {{ form.filename.label }}
+                {{ form.filename(placeholder=form.filename.description, class="form-control") }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.cell_name.label }}
+                {{ form.cell_name(placeholder=form.cell_name.description, class="form-control") }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.colormap.label }}
+                {{ form.colormap(placeholder=form.colormap.description, class="form-select") }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.cyt_potential.label }}
+                {{ form.cyt_potential(placeholder=form.cyt_potential.description, class="form-select") }}
+            </div>
+
+            <table id="reagents_info" name="reagents_info">
+                <tr>
+                    <th>Reagent name</th>
+                    <th>Role</th>
+                    <th>Molar mass</th>
+                    <th>Mass</th>
+                    <th>CC50</th>
+                </tr>
+
+                {% for reagent_info in form.reagents_info %}
+                <tr>
+                    {% for el in reagent_info %}
+                        <td>{{ el(class="form-control") }}</td>
+                    {% endfor %}
+                    <td><button class="btn disabled btn-sm" type="button">delete</button></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+
+            <div class="my-4">
+<!--                <a id="add-reagent-field" type="button" href='#'><img src="{{ url_for('static', filename='images/add.png') }}"></a>-->
+                <button class='btn btn-success' id="add-reagent-field" type="button">Add new reagent</button>
+            </div>
+
+
+            <table id="products_info" name="products_info">
+                <tr>
+                    <th>Product name</th>
+                    <th>Role</th>
+                    <th>Molar mass</th>
+                    <th>Mass</th>
+                    <th>CC50</th>
+                </tr>
+
+                {% for product_info in form.products_info %}
+                <tr>
+                    {% for el in product_info %}
+                        <td>{{ el(class="form-control") }}</td>
+                    {% endfor %}
+                    <td><button class="btn disabled btn-sm" type="button">delete</button></td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <div class="my-4">
+<!--                <a id="add-product-field"  href='#'><img src="{{ url_for('static', filename='images/add.png') }}"></a>-->
+                <button class='btn btn-success' id="add-product-field" type="button">Add new product</button>
+            </div>
+
+
+            <div class="mb-3">
+                <button name='send_create' class="btn btn-primary" type="submit">Send</button>
+            </div>
+
+        </form>
+    </div>
+
+    <div class="alert alert-primary" id='upload-file-form' style="display:block;">
         <form method = "post" class="was-validated" action="{{ url_for('uploader') }}" enctype = "multipart/form-data">
             <p class="fw-bold fs-3">Upload file and select options</p>
 
@@ -24,7 +114,7 @@
                 <select name="colormap" id="colormap" class="form-select" required aria-label="select example">
                     <option value="">Select a colormap</option>
                     {% for colormap in colormap_list %}
-                        <li><option name="colormap" id="colormap"</option>"{{ colormap.name }}"</option></li>
+                        <li><option name="colormap" id="colormap">"{{ colormap.name }}"</option></li>
                     {% endfor %}
                 </select>
             </div>
@@ -33,17 +123,16 @@
                 <select name="cyt_potential" id="cyt_potential" class="form-select" required aria-label="select example">
                     <option value="">Select cytotoxic potential</option>
                     {% for cyt_potential in cyt_potentials_list %}
-                        <li><option name="cyt_potential" id="cyt_potential"</option>"{{ cyt_potential.name }}"</option></li>
+                        <li><option name="cyt_potential" id="cyt_potential">"{{ cyt_potential.name }}"</option></li>
                     {% endfor %}
                 </select>
             </div>
 
             <div class="mb-3">
-                <button name='send' class="btn btn-primary" type="submit">Send</button>
+                <button name='send_upload' class="btn btn-primary" type="submit">Send</button>
             </div>
         </form>
     </div>
-
 
     <div class="alert alert-primary">
         <div class="mb-3">
@@ -105,5 +194,7 @@
         </div>
     </div>
 {% endif %}
+
+<script src="{{ url_for('static', filename='javascript/update_form.js') }}"></script>
 
 {% endblock %}

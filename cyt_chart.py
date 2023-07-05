@@ -82,11 +82,14 @@ def fill_colors(data, category_colors, cytotoxity_scale):
     return colors
 
 
-def cyt_chart(path_graph, reaction_name, molecules, generic_names, normal_cytotoxicity, biofactor, colors, formats):
+def cyt_chart(path_graph, reaction_name, molecules, generic_names, normal_cytotoxicity, biofactor, colors, formats, scale_coef):
     data_cum = normal_cytotoxicity.cumsum(axis=0)
     len_graph = data_cum[len(molecules) - 1]
 
-    fig, ax = plt.subplots(figsize=(25 * len_graph, 2))
+    width = 25 * len_graph/scale_coef
+    height = 2
+
+    fig, ax = plt.subplots(figsize=(width, height))
     ax.invert_yaxis()
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
@@ -275,11 +278,11 @@ def cyt_colormap(cytotoxity_scale, colors, cell, colormap, path_dirs, formats):
 
 
 def choice_colormap(colormap, reactions):
-    # парсинг уникальных значений цитотоксичности для построения цветовой карты
+    # parsing unique cytotoxicity values to build a color map
     cytotoxity_array, number_of_colors_1, number_of_colors_2 = get_all_cytotoxity(reactions)
 
     if colormap == 'percentile':
-        # создание массива цветов для выборки
+        # creating an array of colors to sample
         color_start = 0.0
         color_end_1 = 0.13
         color_end_2 = 0.3
@@ -291,7 +294,7 @@ def choice_colormap(colormap, reactions):
     if colormap == 'linear':
         number_of_colors = 100
 
-        # создание массива цветов
+        # creating an array of colors
         cytotoxity_scale_start = min(cytotoxity_array)
         cytotoxity_scale_end = max(cytotoxity_array)
         colors = plt.get_cmap('hsv')(np.linspace(0.0, 0.35, number_of_colors))
@@ -322,3 +325,24 @@ def find_top_combinations(cyt_metrics, metric, top_size):
         top_combinations.append([names[index_sort], metric_vector[index_sort]])
 
     return top_combinations
+
+
+def calc_scaling_coef(reactions):
+    NC_len_max = 0
+    NC_len_min = 10000000
+
+    for count, el in enumerate(reactions):
+        if count == 0:
+            continue
+        else:
+            NC_len_el = np.sum(el[3])
+
+            if NC_len_el > NC_len_max:
+                NC_len_max = NC_len_el
+
+            if NC_len_el < NC_len_min:
+                NC_len_min = NC_len_el
+
+    scale_coef = np.sqrt(NC_len_min * NC_len_max)
+
+    return scale_coef

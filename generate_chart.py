@@ -32,6 +32,9 @@ def generate_charts(path_file, path_data, colormap, cyt_potential):
 
     colors, cytotoxity_scale = cyt.choice_colormap(colormap, reactions)
 
+    # scaling factor calculation
+    scale_coef = cyt.calc_scaling_coef(reactions)
+
     # plotting a color map
     cyt.cyt_colormap(cytotoxity_scale, colors, cell_name, colormap, path_formats, formats)
 
@@ -50,7 +53,7 @@ def generate_charts(path_file, path_data, colormap, cyt_potential):
             # creating an array of colors for the substances in the considered reaction
             colors_data = cyt.fill_colors(reaction[4], colors, cytotoxity_scale)
             # plotting a diagram for a given reaction
-            cyt.cyt_chart(path_graph, reaction_name, reaction[1], reaction[2], reaction[3], biofactor, colors_data, formats)
+            cyt.cyt_chart(path_graph, reaction_name, reaction[1], reaction[2], reaction[3], biofactor, colors_data, formats, scale_coef)
 
     # writing a table with cytotoxicity metrics
     table_name = filename + '_cyt_metrics.csv'
