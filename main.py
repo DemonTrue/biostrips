@@ -219,9 +219,10 @@ def make_chart(metadata, path_table):
     filename = metadata['title']
     colormap = metadata['colormap']
     cyt_potential = metadata['cyt_potential']
+    filename_no_ext = filename.rsplit('.', 1)[0]
     path_data = os.path.join('data', filename)
 
-    top_combinations = gench.generate_charts(path_data, path_table, colormap, cyt_potential)
+    top_combinations = gench.generate_charts(filename_no_ext, path_data, path_table, colormap, cyt_potential)
 
     return top_combinations
 

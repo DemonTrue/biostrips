@@ -25,7 +25,8 @@ def data_validation(path_file):
 
             for count_line, line in enumerate(lines):
                 if count_line == 0:
-                    if line[0].lower() != 'cell':
+                    line_0 = line[0].lower().replace('\ufeff', '')
+                    if line_0 != 'cell':
                         error_message += 'Add the string "cell" to the line 1!'
                         return error_message
                 elif count_line == 1:
