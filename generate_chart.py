@@ -3,17 +3,19 @@ import cyt_chart as cyt
 import shutil
 
 
-def generate_charts(filename, path_file, path_data, colormap, cyt_potential):
+def generate_charts(dir_name, path_data, colormap, cyt_potential):
     # colormap = 'linear' or 'percentile'
     formats = ['png', 'svg', 'pdf']
     path_formats = []
+
+    # print(path_file)
 
     reactions = cyt.read_data(path_data)
     all_cyt_metrics = {}
 
     cell_name = reactions[0][0]
 
-    path_results = os.path.join('results', filename)
+    path_results = os.path.join('results', dir_name)
 
     for el in formats:
         path_formats.append(os.path.join(path_results, el))
@@ -55,21 +57,20 @@ def generate_charts(filename, path_file, path_data, colormap, cyt_potential):
             cyt.cyt_chart(path_graph, reaction_name, reaction[1], reaction[2], reaction[3], biofactor, colors_data, formats, scale_coef)
 
     # writing a table with cytotoxicity metrics
-    table_name = filename + '_cyt_metrics.csv'
-    path_table = os.path.join(path_results, table_name)
+    cyt_table_name = dir_name + '_cyt_metrics.csv'
+    path_cyt_table = os.path.join(path_results, cyt_table_name)
 
-    with open(path_table, "w", encoding="utf-8") as out_file:
+    with open(path_cyt_table, "w", encoding="utf-8") as out_file:
         print('combinations;biofactor;CPi (initial CP);CPf (final CP);CPf_rel (relative final CP)', file=out_file)
         for el in all_cyt_metrics.items():
-            print(el[0], end=';', file=out_file)
+            print(el[0], end=',', file=out_file)
 
             len_cyt_numbers = len(el[1])
             for count, number in enumerate(el[1]):
-                num_str = str(number).replace('.', ',')
                 if count == len_cyt_numbers - 1:
-                    print(num_str, end='\n', file=out_file)
+                    print(number, end='\n', file=out_file)
                 else:
-                    print(num_str, end=';', file=out_file)
+                    print(number, end=',', file=out_file)
 
 
     # search for the best combinations by the specified metric
@@ -82,11 +83,17 @@ def generate_charts(filename, path_file, path_data, colormap, cyt_potential):
     top_combinations = cyt.find_top_combinations(all_cyt_metrics, metric, top_size)
 
     path_png = os.path.join(path_results, 'png')
-    path_static = os.path.join('static', 'figures', filename)
+    path_static = os.path.join('static', 'figures', dir_name)
 
     if os.path.isdir(path_static):
         shutil.rmtree(path_static)
 
     shutil.copytree(path_png, path_static)
+
+    # сopying a file with all combinations
+    comb_table_name = dir_name + '_comb.txt'
+    path_comb_table = os.path.join(path_results, comb_table_name)
+
+    shutil.copyfile(path_data, path_comb_table)
 
     return top_combinations

@@ -44,13 +44,23 @@
                 {{ form.cyt_potential(placeholder=form.cyt_potential.description, class="form-select") }}
             </div>
 
+            <div class="mb-3">
+                {{ form.variables.label }}
+                {{ form.variables(placeholder=form.variables.description, class="form-control") }}
+            </div>
+
+            <div class="mb-3">
+                {{ form.product_variables.label }}
+                {{ form.product_variables(placeholder=form.product_variables.description, class="form-control") }}
+            </div>
+
             <table id="reagents_info" name="reagents_info">
                 <tr>
                     <th>Reagent name</th>
                     <th>Role</th>
-                    <th>Molar mass</th>
-                    <th>Mass</th>
-                    <th>CC50</th>
+                    <th>Molar mass (g/mol)</th>
+                    <th>Mass (g)</th>
+                    <th>CC50 (mM)</th>
                 </tr>
 
                 {% for reagent_info in form.reagents_info %}
@@ -74,9 +84,9 @@
                 <tr>
                     <th>Product name</th>
                     <th>Role</th>
-                    <th>Molar mass</th>
-                    <th>Mass</th>
-                    <th>CC50</th>
+                    <th>Molar mass (g/mol)</th>
+                    <th>Mass (g)</th>
+                    <th>CC50 (mM)</th>
                 </tr>
 
                 {% for product_info in form.products_info %}

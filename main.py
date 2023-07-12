@@ -8,10 +8,12 @@ import generate_combinations_table as gentab
 import input_validation as inpval
 from flask_wtf import FlaskForm
 from wtforms import StringField, FormField, FieldList, SelectField, Form, DecimalField
-from wtforms.validators import DataRequired, Optional, NumberRange
+from wtforms.validators import DataRequired, NumberRange
 from flask_bootstrap import Bootstrap
 import logging
 from logging.handlers import RotatingFileHandler
+import json
+from decimal import Decimal
 
 path_data = 'data'
 path_meta = 'metadata'
@@ -45,17 +47,21 @@ cyt_potentials_list = [{'name': 'BF'},
                        {'name': 'CPf_rel'}]
 
 
+colormap_choices = [(el["name"], el["name"]) for el in colormap_list]
+cyt_potential_choices = [(el["name"], el["name"]) for el in cyt_potentials_list]
+
+
 class ReagentLineForm(Form):
     reagent_name = StringField("Reagent name: ", validators=[DataRequired()], description="Reagent name")
     reagent_role = StringField("Reagent role: ", validators=[DataRequired()], description="Reagent role")
-    molar_mass = DecimalField("Molar mass: ",
-                              validators=[DataRequired(), NumberRange(0)],
+    molar_mass = DecimalField("Molar mass: ", places=3,
+                              validators=[DataRequired(), NumberRange(0.001)],
                               description="Molar mass")
-    mass = DecimalField("Mass: ",
-                       validators=[DataRequired(), NumberRange(0)],
+    mass = DecimalField("Mass: ", places=10,
+                       validators=[DataRequired(), NumberRange(0.0000000001)],
                        description="Mass")
-    cc50 = DecimalField("CC50: ",
-                       validators=[DataRequired(), NumberRange(0.00001)],
+    cc50 = DecimalField("CC50: ", places=10,
+                       validators=[DataRequired(), NumberRange(0.0000000001)],
                        description="CC50")
     # 0,0000...1???
 
@@ -80,6 +86,15 @@ class OneChartForm(FlaskForm):
     products_info = FieldList(FormField(ReagentLineForm), min_entries=1)
     colormap = SelectField("Choose colormap: ")
     cyt_potential = SelectField("Choose cytotoxic potential: ")
+    variables = StringField("Enter variables separated by commas: ", description="Variables")
+    product_variables = StringField("Enter product variables separated by commas: ", description="Product variables")
+
+
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super().default(obj)
 
 
 @app.route('/')
@@ -104,8 +119,8 @@ def manual():
 @app.route('/create-chart', methods=['POST', 'GET'])
 def create_chart():
     form = OneChartForm()
-    form.colormap.choices = [(el["name"], el["name"]) for el in colormap_list]
-    form.cyt_potential.choices = [(el["name"], el["name"]) for el in cyt_potentials_list]
+    form.colormap.choices = colormap_choices
+    form.cyt_potential.choices = cyt_potential_choices
 
     if 'send_create' in request.form:
         filename = form.filename.data
@@ -116,18 +131,26 @@ def create_chart():
         products_info = form.products_info.data
 
         save_chart_data(filename, cell_name, reagents_info, products_info)
+        form_data = json.dumps(form.data, cls=DecimalEncoder)
 
+        session["OneChartForm"] = form_data
         session["filename"] = filename + '.txt'
         session["colormap"] = colormap
         session["cyt_potential"] = cyt_potential
         session["data_upload"] = 1
+        session["form_chart"] = 1
 
     elif "data_upload" in session:
         if 'send_upload' in request.form:
             session["data_upload"] = 1
+            session["form_chart"] = 0
+
     else:
-        session["data_upload"] = 0
-        session["graphs"] = []
+        if request.method == 'GET':
+            session["data_upload"] = 0
+            session["graphs"] = []
+            session["form_chart"] = 0
+
 
     if session["data_upload"] == 1:
         file_info = {'title': session["filename"], 'colormap': session["colormap"], 'cyt_potential': session["cyt_potential"]}
@@ -142,6 +165,18 @@ def create_chart():
                 session["path_table"] = path_table
                 session["number_of_combinations"] = number_of_combinations
                 session["combs_found"] = 1
+
+                form_chart = session["form_chart"]
+                print(form_chart)
+
+                if form_chart == 1:
+                    form_data = session.get("OneChartForm")
+
+                    form = OneChartForm()
+                    form.colormap.choices = colormap_choices
+                    form.cyt_potential.choices = cyt_potential_choices
+
+                    form.process(data=json.loads(form_data))
             else:
                 flash(message)
 
@@ -156,12 +191,37 @@ def create_chart():
             session["combs_found"] = 1
             session["top_combinations"] = top_combinations
 
+            form_chart = session["form_chart"]
+
+            if form_chart == 1:
+                form_data = session.get("OneChartForm")
+
+                form = OneChartForm()
+                form.colormap.choices = colormap_choices
+                form.cyt_potential.choices = cyt_potential_choices
+
+                form.process(data=json.loads(form_data))
+
     else:
         file_info = {'title': 'NONE', 'colormap': 'NONE', 'cyt_potential': 'NONE'}
         reset_session()
 
     return render_template('create-chart.html', menu=menu, colormap_list=colormap_list,
                            cyt_potentials_list=cyt_potentials_list, json=file_info, session=session, form=form)
+
+
+# @app.route('/load_form')
+# def load_form(form_data):
+#     form = OneChartForm()
+#     form.colormap.choices = colormap_choices
+#     form.cyt_potential.choices = cyt_potential_choices
+#
+#     form.process(data=json.loads(form_data))
+#
+#     return render_template('create-chart.html', menu=menu, colormap_list=colormap_list,
+#                            cyt_potentials_list=cyt_potentials_list, json=file_info, session=session, form=form)
+
+
 
 
 @app.route('/save_chart_data')
@@ -219,10 +279,9 @@ def make_chart(metadata, path_table):
     filename = metadata['title']
     colormap = metadata['colormap']
     cyt_potential = metadata['cyt_potential']
-    filename_no_ext = filename.rsplit('.', 1)[0]
-    path_data = os.path.join('data', filename)
+    dir_name = filename.rsplit('.', 1)[0]
 
-    top_combinations = gench.generate_charts(filename_no_ext, path_data, path_table, colormap, cyt_potential)
+    top_combinations = gench.generate_charts(dir_name, path_table, colormap, cyt_potential)
 
     return top_combinations
 
@@ -246,19 +305,19 @@ def display_chart(filename):
 
 @app.route("/download/<path:filename>")
 def download(filename):
+    os.chdir(path_results)
+
     dir_name = filename.rsplit('.', 1)[0]
-    path_folder = os.path.join(path_results, dir_name)
-    zip_path = path_folder + '.zip'
     zip_name = dir_name + '.zip'
 
-    with ZipFile(zip_path, "w") as zip_arch:
-        for dirpath, _, filenames in os.walk(path_folder):
+    with ZipFile(zip_name, "w") as zip_arch:
+        for dirpath, _, filenames in os.walk(dir_name):
             for filename in filenames:
                 zip_arch.write(os.path.join(dirpath, filename))
 
     directory = os.path.join(app.root_path, path_results)
-
     reset_session()
+    os.chdir('../')
 
     return send_from_directory(directory, zip_name)
 
@@ -275,6 +334,8 @@ def reset_session():
     session["charts_built"] = 0
     session["top_combinations"] = ''
     session["number_of_combinations"] = 0
+    session["OneChartForm"] = []
+    session["form_chart"] = 0
 
 
 @app.route("/download_file/<path:filename>", methods=['GET', 'POST'])
@@ -336,7 +397,7 @@ def pageNotFound(error):
 @app.errorhandler(500)
 def internal_error(exception):
     app.logger.error(exception)
-    return render_template('500.html'), 500
+    return render_template('internal-error.html'), 500
 
 
 if __name__ == '__main__':
@@ -348,4 +409,4 @@ if __name__ == '__main__':
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
-    app.run(host="0.0.0.0", port=8080)
+    app.run(host="0.0.0.0", port=8080, debug=True)
