@@ -210,20 +210,6 @@ def create_chart():
                            cyt_potentials_list=cyt_potentials_list, json=file_info, session=session, form=form)
 
 
-# @app.route('/load_form')
-# def load_form(form_data):
-#     form = OneChartForm()
-#     form.colormap.choices = colormap_choices
-#     form.cyt_potential.choices = cyt_potential_choices
-#
-#     form.process(data=json.loads(form_data))
-#
-#     return render_template('create-chart.html', menu=menu, colormap_list=colormap_list,
-#                            cyt_potentials_list=cyt_potentials_list, json=file_info, session=session, form=form)
-
-
-
-
 @app.route('/save_chart_data')
 def save_chart_data(filename, cell_name, reagents_info, products_info):
     path_file = os.path.join(path_data, filename + '.txt')
