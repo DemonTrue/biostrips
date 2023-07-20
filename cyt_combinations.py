@@ -64,8 +64,11 @@ def parsing_and_preparation_data(path_file):
                 cytotoxicity.append(line[4].replace(',', '.'))
 
                 # calculation of normalized cytotoxicity
-                NC = 1000 * float(line[3].replace(',', '.')) / (
-                            float(line[2].replace(',', '.')) * float(line[4].replace(',', '.')))
+                if line[2].lower() == 'na' or line[3].lower() == 'na' or line[4].lower() == 'na':
+                    NC = 'NA'
+                else:
+                    NC = 1000*float(line[3].replace(',', '.'))/(
+                            float(line[2].replace(',', '.'))*float(line[4].replace(',', '.')))
                 normal_cytotoxicity.append(NC)
 
         # creating a dictionary of variables

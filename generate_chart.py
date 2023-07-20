@@ -28,7 +28,6 @@ def generate_charts(dir_name, path_data, colormap, cyt_potential):
     except OSError:
         pass
 
-
     colors, cytotoxity_scale = cyt.choice_colormap(colormap, reactions)
 
     # scaling factor calculation
@@ -39,20 +38,22 @@ def generate_charts(dir_name, path_data, colormap, cyt_potential):
 
     # cycle through reactions from a file
     for count, reaction in enumerate(reactions):
-        if count == 0: continue
+        if count == 0:
+            continue
         else:
             path_graph = []
-            reaction_name = reaction[0][0]
-            cyt_metrics = cyt.calc_cyt_metrics(reaction[2], reaction[3])  # calculation of cytotoxicity metrics
+            full_data = reaction[0]
+            reaction_name = reaction[1][0]
+            cyt_metrics = cyt.calc_cyt_metrics(reaction[3], reaction[4])  # calculation of cytotoxicity metrics
             biofactor = cyt_metrics[0]
             all_cyt_metrics[reaction_name] = cyt_metrics
 
             for el in path_formats:
                 path_graph.append(os.path.join(el, reaction_name))
             # creating an array of colors for the substances in the considered reaction
-            colors_data = cyt.fill_colors(reaction[4], colors, cytotoxity_scale)
+            colors_data = cyt.fill_colors(reaction[5], colors, cytotoxity_scale)
             # plotting a diagram for a given reaction
-            cyt.cyt_chart(path_graph, reaction_name, reaction[1], reaction[2], reaction[3], biofactor, colors_data, formats, scale_coef)
+            cyt.cyt_chart(path_graph, full_data, reaction_name, reaction[2], reaction[3], reaction[4], biofactor, colors_data, formats, scale_coef)
 
     # writing a table with cytotoxicity metrics
     cyt_table_name = dir_name + '_cyt_metrics.csv'
