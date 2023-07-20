@@ -15,7 +15,7 @@ from logging.handlers import RotatingFileHandler
 import json
 from decimal import Decimal
 from datetime import timedelta
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.gevent import GeventScheduler
 import shutil
 
 
@@ -66,20 +66,6 @@ class ReagentLineForm(Form):
     cc50 = DecimalField("CC50: ", places=10,
                        validators=[DataRequired(), NumberRange(0.0000000001)],
                        description="CC50")
-    # 0,0000...1???
-
-    # def validate(self):
-    #     if not Form.validate(self):
-    #         return False
-    #     result = True
-    #     seen = set()
-    #     for field in self.reagent_role:
-    #         if field.data in seen:
-    #             field.errors.append('This notation has already been specified!')
-    #             result = False
-    #         else:
-    #             seen.add(field.data)
-    #     return result
 
 
 class OneChartForm(FlaskForm):
@@ -429,7 +415,7 @@ def delete_downloads(folder_path):
             print('Failed to delete %s. Reason: %s' % (file_path, e))
 
 
-scheduler = BackgroundScheduler()
+scheduler = GeventScheduler()
 scheduler.add_job(func=shedul_delete, trigger='interval', days=1)
 scheduler.start()
 
@@ -442,4 +428,4 @@ if __name__ == '__main__':
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
-    app.run(host="0.0.0.0", port=8080, debug=True)
+    app.run(host="0.0.0.0")
