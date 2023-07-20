@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, render_template, request, flash, redirect, url_for, send_from_directory, session
+from flask import Flask, render_template, request, flash, redirect, url_for, send_from_directory, session, app
 from werkzeug.utils import secure_filename
 from zipfile import ZipFile
 import os
@@ -14,6 +14,10 @@ import logging
 from logging.handlers import RotatingFileHandler
 import json
 from decimal import Decimal
+from datetime import timedelta
+from apscheduler.schedulers.background import BackgroundScheduler
+import shutil
+
 
 path_data = 'data'
 path_meta = 'metadata'
@@ -21,8 +25,6 @@ path_results = 'results'
 path_examples = 'examples'
 path_new_chart_json = os.path.join(path_meta, 'new_chart.json')
 path_figures = os.path.join('static', 'figures')
-
-
 ALLOWED_EXTENSIONS = ['txt', 'csv']
 
 app = Flask(__name__)
@@ -34,7 +36,8 @@ with open(os.path.join(path_meta, 'secret_key.txt'), 'r') as f:
     app.config['SECRET_KEY'] = f.read()
 
 menu = [{"name": "Main", "url": "/"},
-        {"name": "Built Chart", "url": "/create-chart"},
+        {"name": "Build Chart", "url": "/create-chart"},
+        {"name": "Introduction to biostrips", "url": '/intro_to_biostrips'},
         {"name": "Manual", "url": "/manual"},
         {"name": "About", "url": "/about"}]
 
@@ -87,7 +90,7 @@ class OneChartForm(FlaskForm):
     colormap = SelectField("Choose colormap: ")
     cyt_potential = SelectField("Choose cytotoxic potential: ")
     variables = StringField("Enter variables separated by commas: ", description="Variables")
-    product_variables = StringField("Enter product variables separated by commas: ", description="Product variables")
+    products_variables = StringField("Enter product variables separated by commas: ", description="Products variables")
 
 
 class DecimalEncoder(json.JSONEncoder):
@@ -97,6 +100,12 @@ class DecimalEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
+@app.before_request
+def make_session_permanent():
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=30)
+
+
 @app.route('/')
 @app.route('/home')
 def main():
@@ -104,7 +113,6 @@ def main():
     try:
         with open(path_references, 'r') as file:
             references = [line.replace('\n', '') for line in file.readlines()]
-
     except:
         references = ''
 
@@ -114,6 +122,17 @@ def main():
 @app.route('/manual')
 def manual():
     return render_template('manual.html', menu=menu)
+
+@app.route('/intro_to_biostrips')
+def intro_to_biostrips():
+    path_references = os.path.join(path_meta, 'references.txt')
+    try:
+        with open(path_references, 'r') as file:
+            references = [line.replace('\n', '') for line in file.readlines()]
+    except:
+        references = ''
+
+    return render_template('introduction-to-biostrips.html', menu=menu, references=references)
 
 
 @app.route('/create-chart', methods=['POST', 'GET'])
@@ -129,14 +148,18 @@ def create_chart():
         cyt_potential = form.cyt_potential.data
         reagents_info = form.reagents_info.data
         products_info = form.products_info.data
+        variables = form.variables.data
+        products_variables = form.products_variables.data
 
-        save_chart_data(filename, cell_name, reagents_info, products_info)
+        save_chart_data(filename, cell_name, reagents_info, products_info, variables, products_variables)
         form_data = json.dumps(form.data, cls=DecimalEncoder)
 
         session["OneChartForm"] = form_data
         session["filename"] = filename + '.txt'
         session["colormap"] = colormap
         session["cyt_potential"] = cyt_potential
+        session["variables"] = variables
+        session["product_variables"] = products_variables
         session["data_upload"] = 1
         session["form_chart"] = 1
 
@@ -167,7 +190,6 @@ def create_chart():
                 session["combs_found"] = 1
 
                 form_chart = session["form_chart"]
-                print(form_chart)
 
                 if form_chart == 1:
                     form_data = session.get("OneChartForm")
@@ -211,19 +233,19 @@ def create_chart():
 
 
 @app.route('/save_chart_data')
-def save_chart_data(filename, cell_name, reagents_info, products_info):
+def save_chart_data(filename, cell_name, reagents_info, products_info, variables, products_variables):
     path_file = os.path.join(path_data, filename + '.txt')
 
     with open(path_file, "w", encoding='utf-8') as out_file:
         print("Cell", cell_name, sep='\t', end='\n', file=out_file)
-        print("Variables", end='\n', file=out_file)
-        print("Product variables", end='\n', file=out_file)
+        print("Variables", variables, sep='\t', end='\n', file=out_file)
+        print("Product variables", products_variables, sep='\t', end='\n', file=out_file)
         print("Samples", "Abbreviation", "Mr, g*mol-1", "Mass, g", "CC50, mM", sep='\t', end='\n', file=out_file)
         print("Starting materials", end='\n', file=out_file)
 
         for el in reagents_info:
             print(el["reagent_name"], end='\t', file=out_file)
-            print(el["reagent_role"], end = '\t', file = out_file)
+            print(el["reagent_role"], end='\t', file=out_file)
             print(el["molar_mass"], end='\t', file=out_file)
             print(el["mass"], end='\t', file=out_file)
             print(el["cc50"], end='\n', file=out_file)
@@ -243,9 +265,9 @@ def save_chart_data(filename, cell_name, reagents_info, products_info):
 @app.route('/data_validation')
 def data_validation(metadata):
     filename = metadata['title']
-    path_data = os.path.join('data', filename)
+    path_file = os.path.join('data', filename)
 
-    message = inpval.data_validation(path_data)
+    message = inpval.data_validation(path_file)
 
     return message
 
@@ -253,9 +275,9 @@ def data_validation(metadata):
 @app.route('/calc_combinations')
 def calc_combinations(metadata):
     filename = metadata['title']
-    path_data = os.path.join('data', filename)
+    path_file = os.path.join('data', filename)
 
-    path_table, number_of_combinations = gentab.generate_table(path_data)
+    path_table, number_of_combinations = gentab.generate_table(path_file)
 
     return path_table, number_of_combinations
 
@@ -385,6 +407,31 @@ def internal_error(exception):
     app.logger.error(exception)
     return render_template('internal-error.html'), 500
 
+
+def shedul_delete():
+    path_graphs = os.path.join('static', 'figures')
+    delete_downloads(path_results)
+    delete_downloads(path_data)
+    delete_downloads(path_graphs)
+
+    reset_session()
+
+
+def delete_downloads(folder_path):
+    for filename in os.listdir(folder_path):
+        file_path = os.path.join(folder_path, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print('Failed to delete %s. Reason: %s' % (file_path, e))
+
+
+scheduler = BackgroundScheduler()
+scheduler.add_job(func=shedul_delete, trigger='interval', days=1)
+scheduler.start()
 
 if __name__ == '__main__':
     log_file = 'flask.log'

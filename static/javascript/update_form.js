@@ -47,9 +47,9 @@ function update_table(e){
     <tr>
         <td><input class="form-control" id="${newFieldName_name}" name="${newFieldName_name}" required type="text" value=""></td>
         <td><input class="form-control" id="${newFieldName_role}" name="${newFieldName_role}" required type="text" value=""></td>
-        <td><input class="form-control" id="${newFieldName_mmass}" name="${newFieldName_mmass}" required step="any" type="number" value=""></td>
-        <td><input class="form-control" id="${newFieldName_mass}" name="${newFieldName_mass}" required step="any" type="number" value=""></td>
-        <td><input class="form-control" id="${newFieldName_cc}" name="${newFieldName_cc}" required step="any" type="number" value=""></td>
+        <td><input class="form-control" id="${newFieldName_mmass}" min="0.001" name="${newFieldName_mmass}" required step="any" type="number" value=""></td>
+        <td><input class="form-control" id="${newFieldName_mass}" min="1e-10" name="${newFieldName_mass}" required step="any" type="number" value=""></td>
+        <td><input class="form-control" id="${newFieldName_cc}" min="1e-10" name="${newFieldName_cc}" required step="any" type="number" value=""></td>
         <td><button class="btn btn-danger btn-sm">delete</button></td>
     </tr>
     </table>

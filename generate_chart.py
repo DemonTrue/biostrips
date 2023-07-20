@@ -8,8 +8,6 @@ def generate_charts(dir_name, path_data, colormap, cyt_potential):
     formats = ['png', 'svg', 'pdf']
     path_formats = []
 
-    # print(path_file)
-
     reactions = cyt.read_data(path_data)
     all_cyt_metrics = {}
 
