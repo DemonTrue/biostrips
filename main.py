@@ -392,16 +392,17 @@ def pageNotFound(error):
 @app.errorhandler(500)
 def internal_error(exception):
     app.logger.error(exception)
-    return render_template('internal-error.html'), 500
+    return render_template('internal-error.html', menu=menu), 500
 
 
 def shedul_delete():
-    path_graphs = os.path.join('static', 'figures')
-    delete_downloads(path_results)
-    delete_downloads(path_data)
-    delete_downloads(path_graphs)
+    with app.test_request_context():
+        path_graphs = os.path.join('static', 'figures')
+        delete_downloads(path_results)
+        delete_downloads(path_data)
+        delete_downloads(path_graphs)
 
-    reset_session()
+        reset_session()
 
 
 def delete_downloads(folder_path):
@@ -429,4 +430,4 @@ if __name__ == '__main__':
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0")
