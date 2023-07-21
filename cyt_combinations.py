@@ -47,6 +47,8 @@ def parsing_and_preparation_data(path_file):
 
             if count_line == 0 or count_line == 1 or count_line == 2 or count_line == 3 or count_line == 4:
                 continue
+            elif len(line) <= 1:
+                continue
             elif name_string in roles_of_molecules:
                 if name_string == 'products':
                     product_flag = 1

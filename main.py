@@ -175,18 +175,19 @@ def create_chart():
                 session["number_of_combinations"] = number_of_combinations
                 session["combs_found"] = 1
 
-                form_chart = session["form_chart"]
-
-                if form_chart == 1:
-                    form_data = session.get("OneChartForm")
-
-                    form = OneChartForm()
-                    form.colormap.choices = colormap_choices
-                    form.cyt_potential.choices = cyt_potential_choices
-
-                    form.process(data=json.loads(form_data))
             else:
                 flash(message)
+
+            form_chart = session["form_chart"]
+
+            if form_chart == 1:
+                form_data = session.get("OneChartForm")
+
+                form = OneChartForm()
+                form.colormap.choices = colormap_choices
+                form.cyt_potential.choices = cyt_potential_choices
+
+                form.process(data=json.loads(form_data))
 
         if 'gencharts' in request.form:
             path_table = session["path_table"]
@@ -428,4 +429,4 @@ if __name__ == '__main__':
     file_handler.setFormatter(formatter)
     app.logger.addHandler(file_handler)
 
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", debug=True)

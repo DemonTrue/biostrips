@@ -59,6 +59,8 @@ def data_validation(path_file):
                 product_flag = 1
                 line_product_start = count_line + 1
             continue
+        elif len(line) <= 1:
+            continue
         else:
             repetition = get_repeating_element_index(line[1], generic_names)
             if repetition == 'new':
