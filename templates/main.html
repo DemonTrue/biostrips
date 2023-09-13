@@ -21,13 +21,13 @@
 
     <p class="lead">The Green chemistry and Sustainable development strategies have contributed significantly
         to decreasing the destructive effects of industrial chemical processes on the environment. However,
-        the common environmental metrics, such as E-factor and Atom economy, do not consider the toxicity
+        common environmental metrics, such as E-factor and Atom economy, do not consider the toxicity
         of components involved in a particular chemical process.</p>
 
     <p class="lead">Recently, we have developed a principally novel approach to evaluation of chemical reactions
         from the viewpoint of toxicity of their participating components by means of toxicity profiles (tox-Profiles).
-        This approach is applicable to any chemical transformation the toxicity of components of which can be tested
-        in some biological object.</p>
+        This approach is applicable to any chemical transformation, for which the toxicity of its components
+        can be tested in some biological object.</p>
 
     <p class="lead">tox-Profiles of chemical reactions visually show the “toxic potential” of a given chemical process
         by considering the toxicity of all the substances entering the process or being produced in its course.
@@ -44,8 +44,10 @@
         cytotoxicity-based tox-Profiles bio-Profiles and bio-Strips (compact version of bio-Profiles).</p>
 
     <p class="lead">bio-Profiles and bio-Strips allow carrying out fast preliminary assessment of the input of participant
-        substances into the “overall toxicity” of a given reaction by using half-maximal cytotoxicity concentrations (CC50)
-        as toxicity metrics. A more detailed description of the concept is given in the “Intro to bio-Strips” tab.</p>
+        substances into the “overall toxicity” of a given reaction by using half-maximal cytotoxicity concentrations (CC<sub>50</sub>)
+        as toxicity metrics. A more detailed description of the concept is given in the
+        <a href="{{ url_for('intro_to_biostrips') }}" class="link-danger">“Intro to bio-Strips”</a>
+        tab.</p>
 
     <p class='lead fw-bold'>Here, you can build bio-Strips for your own chemical processes using your own
         data on biological activity. Click
@@ -66,7 +68,7 @@
 
     <div class="d-grid gap-2">
         <button class="alert alert-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapse_example" aria-expanded="false" aria-controls="collapse_example">
-            An example of automatically generated diagrams for the Suzuki reaction:
+            An example of automatically generated bio-Strips for the Suzuki reaction:
         </button>
     </div>
 

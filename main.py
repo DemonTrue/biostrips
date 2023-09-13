@@ -36,8 +36,8 @@ with open(os.path.join(path_meta, 'secret_key.txt'), 'r') as f:
     app.config['SECRET_KEY'] = f.read()
 
 menu = [{"name": "Main", "url": "/"},
-        {"name": "Build Chart", "url": "/create-chart"},
-        {"name": "Introduction to biostrips", "url": '/intro_to_biostrips'},
+        {"name": "Intro to bio-Strips", "url": '/intro_to_biostrips'},
+        {"name": "Build Charts", "url": "/create-chart"},
         {"name": "Manual", "url": "/manual"},
         {"name": "About", "url": "/about"}]
 
